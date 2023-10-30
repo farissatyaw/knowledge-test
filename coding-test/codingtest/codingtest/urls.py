@@ -18,4 +18,5 @@ from django.urls import include, path
 
 urlpatterns = [
     path("api/v1/", include("csvapi.urls")),
+    path("metrics/", include("metrics.urls"))
 ]
