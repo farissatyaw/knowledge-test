@@ -14,6 +14,9 @@ import requests
 from io import BytesIO
 # Create your views here.
 
+def landing(request):
+    return HttpResponse("Success! This is a 200 OK response.", status=200)
+
 @csrf_exempt
 def generate(request):
     if(request.method == "POST"):
@@ -75,7 +78,7 @@ def send_mq(request):
         object_info = minio_client.stat_object(os.getenv("MINIO_BUCKET"), object_name)
         fileSize = object_info.size
         producer = KafkaProducer(
-            bootstrap_servers=['localhost:9092'],
+            bootstrap_servers=[os.getenv("KAFKA_BROKERS")],
             value_serializer=lambda v: json.dumps(v).encode('utf-8')
         )
         producer.send("csv.fileSize", {'csvName': object_name, 'size': fileSize, 'created_at': datetime.now().isoformat()})

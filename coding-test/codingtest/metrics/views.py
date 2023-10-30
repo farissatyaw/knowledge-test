@@ -20,6 +20,7 @@ def consume_kafka():
         for message in consumer:
             try:
                 data = json.loads(message.value.decode('utf-8'))
+                print(data)
                 total_size_gauge.inc(data['size'])  # Increase the total size gauge
             except Exception as e:
                 print(f"Error processing message: {str(e)}")

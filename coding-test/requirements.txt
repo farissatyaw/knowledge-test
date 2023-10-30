@@ -1,0 +1,6 @@
+Django==4.2.6
+kafka_python==2.0.2
+minio==7.1.17
+prometheus_client==0.17.1
+python-dotenv==1.0.0
+Requests==2.31.0
