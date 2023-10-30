@@ -1,6 +1,10 @@
 stages:
   - test
+  - build
   - deploy
+
+variables:
+  IMAGE_TAG: "farissatyaw/codingtest"
 
 django_test:
   stage: test
@@ -11,6 +15,28 @@ django_test:
     - git clone https://github.com/farissatyaw/knowledge-test.git
     - pip install -r knowledge-test/coding-test/requirements.txt
     - python knowledge-test/coding-test/codingtest/manage.py test csvapi
+build:
+  stage: build
+  image: docker:20.10
+  services:
+    - docker:20.10-dind
+  before_script:
+    - apk update
+    - apk add git
+    - apk add docker
+    - echo $IMAGE_TAG
+    - echo "$DOCKER_REGISTRY_PASS" | docker login --username farissatyaw --password-stdin
+  script:
+    - export VERSION=$(date +%s)
+    - echo VERSION=$VERSION > version.txt
+    - git clone https://github.com/farissatyaw/knowledge-test.git
+    - cd knowledge-test/coding-test/
+    - docker build . -t $IMAGE_TAG:$VERSION
+    - docker push $IMAGE_TAG:$VERSION
+  artifacts:
+    paths:
+      - "version.txt"
+
 deploy_to_kubernetes:
   stage: deploy
   image:
@@ -18,8 +44,12 @@ deploy_to_kubernetes:
     entrypoint: [""]
   dependencies:
     - django_test
+    - build
   script:
+    - source version.txt
+    - echo $VERSION
     - apk update
     - apk add git
     - git clone https://github.com/farissatyaw/knowledge-test.git
+    - sed -i "s/1.0.0/$VERSION/g" knowledge-test/coding-test/manifests/codingtest/values.yaml
     - helm template knowledge-test/coding-test/manifests/codingtest/
