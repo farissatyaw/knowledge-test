@@ -4,15 +4,22 @@ stages:
 
 django_test:
   stage: test
-  image: python:3.10
+  image: python:3.10-alpine
   script:
-    - pip install -r coding-test/requirements.txt
-    - python coding-test/codingtest/manage.py test csvapi
-#deploy_to_kubernetes:
-#  stage: deploy
-#  image: alpine:latest
-#  dependencies:
-#    - django_test
-#  script:
-#    - apk add --no-cache bash
-#    - helm upgrade --install codingtest coding-test/manifest/codingtest
+    - apk update
+    - apk add git
+    - git clone https://github.com/farissatyaw/knowledge-test.git
+    - pip install -r knowledge-test/coding-test/requirements.txt
+    - python knowledge-test/coding-test/codingtest/manage.py test csvapi
+deploy_to_kubernetes:
+  stage: deploy
+  image:
+    name: alpine/helm
+    entrypoint: [""]
+  dependencies:
+    - django_test
+  script:
+    - apk update
+    - apk add git
+    - git clone https://github.com/farissatyaw/knowledge-test.git
+    - helm template knowledge-test/coding-test/manifests/codingtest/
